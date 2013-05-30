@@ -56,7 +56,7 @@ public class ReplayParser {
 		
 			}
 		}
-		System.out.println("Done...);
+		System.out.println("Done...");
 		
 	}
 	
