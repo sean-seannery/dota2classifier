@@ -19,6 +19,15 @@ dragon
 drake
 thunderhide
 rumblehide
-buff/debuff.
+buff/debuff
 lizzard
 roshan
+illusion
+barracks
+tower
+ward
+eidolon
+spiderling
+spiderite
+building
+ourier

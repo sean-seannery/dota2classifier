@@ -92,6 +92,7 @@ public class ReplayParser {
 	    	
 			while ((line = reader.readLine()) != null) {
 				boolean ignore_line = false;
+				line = line.replace(".", "");
 			    String[] words = line.split(" ");
 			    //check inputfile line for bad words, if it has, dont write out line
 			    for (String word : words){

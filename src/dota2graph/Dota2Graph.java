@@ -57,4 +57,13 @@ public class Dota2Graph {
 		return graphMap.keySet().size();
 	}
 	
+	public String toString() {
+		String output = "Dota2Graph{" + "\n";
+		for (Dota2GraphNode node : graphMap.keySet() ) {
+			output += "   " + node + graphMap.get(node).size() + "\n";
+		}
+		output +="}";
+		return output;
+	}
+	
 }

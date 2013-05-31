@@ -11,14 +11,12 @@ import java.util.ArrayList;
  */
 public class Dota2GraphNode {
 
-	private int playerID;
 	private String characterName;
 	private ArrayList<Dota2GraphEdge> edges;
 	
-	public Dota2GraphNode(int id, String name){
-		playerID = id;
+	public Dota2GraphNode(String name){
 		characterName = name;
-		edges = null;
+		edges = new ArrayList<Dota2GraphEdge> ();
 	}
 	
 	
@@ -28,7 +26,7 @@ public class Dota2GraphNode {
 	      return true;
 	    } else if (obj instanceof Dota2GraphNode) {
 	    	Dota2GraphNode node = (Dota2GraphNode) obj;
-	      if (this.playerID == node.getPlayerID() && this.characterName.equalsIgnoreCase(node.getCharacterName())
+	      if ( this.characterName.equalsIgnoreCase(node.getCharacterName())
 	    		 && this.edges.equals(node.getEdges()) ) {
 	        return true;
 	      } else {
@@ -38,15 +36,13 @@ public class Dota2GraphNode {
 	      return false;
 	    }
 	}
-	
+	public int hashCode() {
+	    int hash = this.characterName.hashCode();
+	    return hash;
+	}
 	
 	//accessors
-	public int getPlayerID() {
-		return playerID;
-	}
-	public void setPlayerID(int playerID) {
-		this.playerID = playerID;
-	}
+
 	public String getCharacterName() {
 		return characterName;
 	}
@@ -58,6 +54,10 @@ public class Dota2GraphNode {
 	}
 	public void setEdges(ArrayList<Dota2GraphEdge> edges) {
 		this.edges = edges;
+	}
+	
+	public String toString() {
+		return "(" + characterName + ")";	
 	}
 
 }
