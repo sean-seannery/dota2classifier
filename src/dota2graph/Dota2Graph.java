@@ -4,6 +4,7 @@
 package dota2graph;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 /**
@@ -13,9 +14,18 @@ import java.util.HashMap;
 public class Dota2Graph {
 
 	private HashMap<Dota2GraphNode, ArrayList<Dota2GraphEdge>> graphMap;
+	private Date startTime;
+	private Date endTime;
 	
 	public Dota2Graph(){
 		graphMap = new HashMap<Dota2GraphNode, ArrayList<Dota2GraphEdge>>();
+		startTime = null;
+		endTime = null;
+	}
+	public Dota2Graph(Date newStartTime, Date newEndTime){
+		graphMap = new HashMap<Dota2GraphNode, ArrayList<Dota2GraphEdge>>();
+		startTime = newStartTime;
+		endTime = newEndTime;
 	}
 
 	public void addNode(Dota2GraphNode newNode){
@@ -64,6 +74,27 @@ public class Dota2Graph {
 		}
 		output +="}";
 		return output;
+	}
+	
+	public String calculateMVP() {
+		int weight = 0;
+		int maxWeight = 0;
+		Dota2GraphNode maxNode = null;
+		for (Dota2GraphNode node : graphMap.keySet() ) {
+			weight = 0;
+			for (Dota2GraphEdge edge : graphMap.get(node)) {
+				
+					weight += edge.getWeight();
+
+			}
+			if (weight >= maxWeight){
+				maxWeight = weight;
+				maxNode = node;
+			}
+			
+		}
+		
+		return maxNode.getCharacterName();
 	}
 	
 }
