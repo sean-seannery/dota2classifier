@@ -14,7 +14,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -25,7 +24,7 @@ import java.util.HashSet;
  * This class takes .log files and turns them into .log_parsed files
  * It filters out lines in the log files based on what words appear in them
  */
-public class ReplayParser {
+public class ReplayParserWithCont {
 
 	private HashSet<String> bad_dictionary;
 
@@ -42,10 +41,10 @@ public class ReplayParser {
 
 		}
 		if (args.length >= 1 && args[0].endsWith(".log")){
-			ReplayParser parser = new ReplayParser();
+			ReplayParserWithCont parser = new ReplayParserWithCont();
 			for (String filename : args){
 				System.out.println("Processing: " + filename);
-				parser.parse(filename, filename + "_parsed",filename + "_timed",0);
+				parser.parse(filename, filename + "_parsed",filename + "_timed",45);
 			}
 		}
 		//process .log files in a full directory. requires user to include '/' to work
@@ -53,13 +52,13 @@ public class ReplayParser {
 			//get files in directory
 			File folder = new File(args[0]);
 			File[] listOfFiles = folder.listFiles();
-			ReplayParser parser = new ReplayParser();
+			ReplayParserWithCont parser = new ReplayParserWithCont();
 			//loop through files and process
 			for (File filename : listOfFiles){
 				if (filename.getName().endsWith(".log"))
 				{
 					System.out.println("Processing: " + filename.getName());
-					parser.parse(filename.getAbsolutePath(), filename.getAbsolutePath() + "_parsed",filename.getAbsolutePath() + "_timed",0);
+					parser.parse(filename.getAbsolutePath(), filename.getAbsolutePath() + "_parsed",filename.getAbsolutePath() + "_timed",45);
 
 				}
 
@@ -69,7 +68,7 @@ public class ReplayParser {
 
 	}
 
-	public ReplayParser() {
+	public ReplayParserWithCont() {
 		//load hash map dictionaries
 		bad_dictionary = new HashSet<String>();		
 		File file = new File("badwords.txt");
@@ -98,12 +97,14 @@ public class ReplayParser {
 		String line = null;
 		int lastCount = 0;
 		String lastTime = null;
+		long newTimeMs = 0;
+		long lastTimeMs = 0;
 		Calendar firstTimeCalender = GregorianCalendar.getInstance();
 		Calendar lastTimeCalender = GregorianCalendar.getInstance();
 		Calendar newTimeCalender = GregorianCalendar.getInstance();
 		DateFormat dateFormat = new SimpleDateFormat("mm:ss");
 		int count = 0;
-		int weight = 0;
+		ArrayList<Integer> timeSeries = new ArrayList<Integer>();
 
 		try {
 			reader = new BufferedReader(new FileReader(inFile));
@@ -125,12 +126,13 @@ public class ReplayParser {
 					if (!outFile.exists()) {
 						outFile.createNewFile();
 					}
+
 					String newTime = words[0];
-					ArrayList<String> wordsAL = new ArrayList<String>(Arrays.asList(line.split(" ")));
 					Date date = null;
 					try {
 						date = dateFormat.parse(newTime);
 						newTimeCalender.setTime(date);
+						newTimeMs = (newTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000; 
 					} catch (ParseException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -140,35 +142,46 @@ public class ReplayParser {
 						lastTime = newTime;
 						firstTimeCalender.setTime(date);
 						lastTimeCalender.setTime(date);
+						lastTimeMs = (lastTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000; 
+
 					}
 					//System.out.println((lastTimeCalender.getTimeInMillis()	- newTimeCalender.getTimeInMillis()));
-					if ((newTimeCalender.getTimeInMillis()	- lastTimeCalender.getTimeInMillis()) <= timeInterval)
+					if (newTimeMs - lastTimeMs <= timeInterval)
 					{
-						if (line.contains("damage")){
-							weight = Integer.parseInt(
-									wordsAL.get(wordsAL.indexOf("deals") + 1) );
-						}
-						if (line.contains("heals")){
-							weight = Integer.parseInt(
-									wordsAL.get(wordsAL.indexOf("HP") - 1) );
+						for (int i = (int) lastTimeMs; i < lastTimeMs+timeInterval; i++) {
+							try
+							{
+								int  current = timeSeries.get(i);
+								current++;
+								timeSeries.set(i, current);
+							} catch(IndexOutOfBoundsException e)
+							{
+								timeSeries.add(1);
+							}
 						}
 						lastCount++;
-					}else 
+					}
+					else 
 					{
-						timesWriter.write((lastTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000 + " " + weight + "\n");
+						/*timesWriter.write((lastTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000 + " " + lastCount + "\n");
 						
 						for(int i = (int) (lastTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000+1;i<(int) (newTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000; i++)
 						{
 							timesWriter.write(i + " " + 0 + "\n");
 						}
-						
-						count++;
-						
+						count++;*/
 						lastTimeCalender.setTime(date);
+						lastTimeMs = (lastTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000; 
 						lastCount = 1;
 					}
 					writer.write(line + "\n");
 				}
+			}
+			System.out.println(timeSeries.size());
+			System.out.println(timeSeries.get(2));
+			for (int i = 0; i < timeSeries.size(); i++)
+			{
+				timesWriter.write(i + " " + timeSeries.get(i) + "\n");
 			}
 			System.out.println(count);
 			reader.close();
