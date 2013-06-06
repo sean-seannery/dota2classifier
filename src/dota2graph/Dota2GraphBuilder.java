@@ -51,36 +51,52 @@ public class Dota2GraphBuilder {
 				} else {
 					totalMVP.put(mvp1,1);
 				}
-				System.out.println(totalMVP.toString());
+				
 			}
-			
+			System.out.println(totalMVP.toString());
 			System.out.println(builder.getKDAMVP(args[0].replace(".log_parsed", ".txt")));
 			
 		}
 		//do all files in a directory
-		if (args.length == 2 && args[0].endsWith("/")){
+		if (args.length == 1 && args[0].endsWith("/")){
 			File folder = new File(args[0]);
 			File[] listOfFiles = folder.listFiles();
 			int correct = 0;
 			int total = 0;
 		    for (File f : listOfFiles) {
-		    	
+		    	totalMVP = new HashMap<String, Integer>();
 		    	if (f.getName().endsWith(".log_parsed")) {
 		    		total++;
 		    		String mvp1 = "", mvp2 = "";
 		    		Dota2GraphBuilder builder = new Dota2GraphBuilder();
-					builder.readInTimeWindows(args[1]);
+					builder.readInTimeWindows(f.getAbsolutePath().replace(".log_parsed", ".log_windows"));
 					for (ArrayList<Integer> dates : builder.getTimeWindows()){
 						
 						builder.createGraph(f.getAbsolutePath(),dates.get(0), dates.get(1));
 						mvp1 = builder.getGraph().calculateMVP();
-						System.out.println(mvp1);		
+						//System.out.println(mvp1);		
 						if (totalMVP.containsKey(mvp1)){
 							totalMVP.put(mvp1, totalMVP.get(mvp1) + 1);
 						} else {
 							totalMVP.put(mvp1,1);
 						}
 					}
+					
+					int topplayer = -1;
+					for(String name : totalMVP.keySet()){
+						
+						if (totalMVP.get(name) > topplayer){
+							topplayer=totalMVP.get(name);
+							mvp1 = name;
+						}
+					}
+					
+					
+					
+					
+					
+					System.out.println(totalMVP.toString());
+					System.out.println(mvp1);
 					mvp2 = builder.getKDAMVP(f.getAbsolutePath().replace(".log_parsed", ".txt"));
 					System.out.println(mvp2);
 					System.out.println();

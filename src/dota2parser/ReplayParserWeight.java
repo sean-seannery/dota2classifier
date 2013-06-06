@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import dota2changepoint.ChangePointParser;
+
 /**
  * @author sam
  * This class takes .log files and turns them into .log_parsed files
@@ -50,6 +52,13 @@ public class ReplayParserWeight {
 			for (String filename : args){
 				System.out.println("Processing: " + filename);
 				parser.parse(filename, filename + "_parsed",filename + "_timed",filename+ "_death",0);
+				ChangePointParser cpp =  new ChangePointParser(filename + "_timed");
+				ArrayList<Integer> peaks = cpp.getChangepointPeaks();
+				if (peaks.size() == 0)
+					System.err.println("NO PEAKS FOUND");
+				cpp.getChangepointWindows(peaks,filename + "_windows");
+				
+				
 			}
 		}
 		//process .log files in a full directory. requires user to include '/' to work
@@ -64,7 +73,11 @@ public class ReplayParserWeight {
 				{
 					System.out.println("Processing: " + filename.getName());
 					parser.parse(filename.getAbsolutePath(), filename.getAbsolutePath() + "_parsed",filename.getAbsolutePath() + "_timed",filename.getAbsolutePath() + "_death",0);
-
+					ChangePointParser cpp =  new ChangePointParser(filename + "_timed");
+					ArrayList<Integer> peaks = cpp.getChangepointPeaks();
+					if (peaks.size() == 0)
+						System.err.println("NO PEAKS FOUND");
+					cpp.getChangepointWindows(peaks,filename + "_windows");
 				}
 
 			}
