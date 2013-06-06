@@ -1,4 +1,4 @@
-setwd( "C:/Users/Emre/Documents/MATLAB/Project")
+setwd( "C:/Users/Emre/Documents/GitHub/dota2classifier")
 args <- commandArgs(trailingOnly = TRUE)
 library(changepoint)
 deaths = read.table(args[2])
@@ -8,6 +8,7 @@ print(N)
 
 mydata = read.table(args[1])
 m.data = ts(mydata[,2])
+print(length(m.data))
 m.bs=cpt.mean(m.data,penalty='Manual',pen.value='5*log(n)',method='PELT')
 plot(m.bs)
 for(i in 1:N) 

@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -191,24 +193,25 @@ public class ReplayParserWeight {
 					else 
 					{
 						weight = 0;
-						queue.offer((double) lastCount);
+						
 						ArrayList<Double> weightsInWindow = new ArrayList<Double>(queue);
 						for (int i = 0; i < weightsInWindow.size(); i++) 
 						{
 							weight += ((double)(i+1)/10)*weightsInWindow.get(i);
 						}
 						weight += lastCount;
+						queue.offer((double) lastCount);
 						if (queue.size()>10)
 						{
 							queue.poll();
 						}
 						timesWriter.write((lastTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000 + " " + weight + "\n");
-						/*
+						
 						for(int i = (int) (lastTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000+1;i<(int) (newTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000; i++)
 						{
 							timesWriter.write(i + " " + 0 + "\n");
 						}
-						count++;*/
+						count++;
 						lastTimeCalender.setTime(date);
 						lastTimeMs = (lastTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000; 
 						lastCount = 1;
@@ -224,7 +227,21 @@ public class ReplayParserWeight {
 			writer.close();
 			deathWriter.close();
 			timesWriter.close();
+			Process proc =Runtime.getRuntime().exec("Rscript pelt.R "+ outTimesFile + " " +deathTimesFilePointer); 
+			InputStream stderr = proc.getErrorStream();
+            InputStreamReader isr = new InputStreamReader(stderr);
+            BufferedReader br = new BufferedReader(isr);
+             line = null;
+            System.out.println("<ERROR>");
+            while ( (line = br.readLine()) != null)
+                System.out.println(line);
+            System.out.println("</ERROR>");
+            int exitVal = proc.waitFor();
+            System.out.println("Process exitValue: " + exitVal);
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
