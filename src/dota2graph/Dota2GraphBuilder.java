@@ -43,6 +43,29 @@ public class Dota2GraphBuilder {
 				System.out.println();
 			}
 			
+			System.out.println(builder.getKDAMVP(args[0].replace(".log_parsed", ".txt")));
+			
+		}
+		//do all files in a directory
+		if (args.length == 2 && args[0].endsWith("/")){
+			File folder = new File(args[0]);
+			File[] listOfFiles = folder.listFiles();
+
+		    for (File f : listOfFiles) {
+		    	if (f.getName().endsWith(".log_parsed")) {
+		    		Dota2GraphBuilder builder = new Dota2GraphBuilder();
+					builder.readInTimeWindows(args[1]);
+					for (ArrayList<Date> dates : builder.getTimeWindows()){
+						
+						builder.createGraph(f.getAbsolutePath(),dates.get(0), dates.get(1));
+						System.out.println(builder.getGraph().calculateMVP());		
+					}
+					
+					System.out.println("KDA:"+builder.getKDAMVP(f.getAbsolutePath().replace(".log_parsed", ".txt")));
+					System.out.println();
+		    	}
+		    }
+
 		}
 
 	}
@@ -114,6 +137,7 @@ public class Dota2GraphBuilder {
 					p1Name = p1Name + words.get(i) + " ";
 				}
 				p1Name = p1Name.trim();
+				weight = 900;
 			}
 			Dota2GraphNode p1Node = new Dota2GraphNode(p1Name);
 			Dota2GraphNode p2Node = new Dota2GraphNode(p2Name);
@@ -151,6 +175,51 @@ public class Dota2GraphBuilder {
 		}
 		this.timeWindows = retVal;
 		return retVal;
+		
+	}
+	
+	public String getKDAMVP(String fileName) {
+		File file = new File (fileName);
+		BufferedReader reader = null;
+		String bestHero = "";
+		double bestKDA=-100;
+		try {
+			reader = new BufferedReader(new FileReader(file));
+			String line = null;
+			while ((line = reader.readLine()) != null) {
+				if (line.trim().contains("Players Info:")){
+					//read in another line because the next line is blank
+					line = reader.readLine();
+					while (! (line = reader.readLine()).trim().equals("")) {
+						//System.out.println(line);
+
+						int startIndex = line.indexOf("KDA: ") + 5;
+						int endIndex = line.indexOf(" CS: ") - 1;
+						String[] KDAString = line.substring(startIndex, endIndex).split("/");
+						double denominator = Double.parseDouble(KDAString[1]);
+						if (denominator == 0){
+							denominator = .01;
+						}
+						double kda = Double.parseDouble(KDAString[0]) / denominator;
+						if (kda > bestKDA){
+							bestKDA = kda;
+							startIndex = line.indexOf(": ") + 2;
+							endIndex = line.indexOf(" KDA: ") - 1;
+							bestHero = line.substring(startIndex, endIndex);
+							
+						}
+						
+					}
+					break;
+				}
+				
+			}
+			
+			reader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return bestHero + " " + bestKDA;
 		
 	}
 
