@@ -167,15 +167,16 @@ public class ReplayParserWeight {
 					//System.out.println((lastTimeCalender.getTimeInMillis()	- newTimeCalender.getTimeInMillis()));
 					if (newTimeMs - lastTimeMs <= timeInterval)
 					{
-						/*
+						
 						if (line.contains("damage")){
-							weight = Integer.parseInt(
+							lastCount += Integer.parseInt(
 									wordsAL.get(wordsAL.indexOf("deals") + 1) );
 						}
 						if (line.contains("heals")){
-							weight = Integer.parseInt(
+							lastCount += Integer.parseInt(
 									wordsAL.get(wordsAL.indexOf("HP") - 1) );
 						}
+						/*
 						for (int i = (int) lastTimeMs; i < lastTimeMs+timeInterval; i++) {
 							try
 							{
@@ -188,7 +189,7 @@ public class ReplayParserWeight {
 							}
 						}*/
 						
-						lastCount++;
+						//lastCount++;
 					}
 					else 
 					{
@@ -222,10 +223,8 @@ public class ReplayParserWeight {
             InputStreamReader isr = new InputStreamReader(stderr);
             BufferedReader br = new BufferedReader(isr);
              line = null;
-            System.out.println("<ERROR>");
             while ( (line = br.readLine()) != null)
                 System.out.println(line);
-            System.out.println("</ERROR>");
             int exitVal = proc.waitFor();
             System.out.println("Process exitValue: " + exitVal);
 		} catch (IOException e) {
