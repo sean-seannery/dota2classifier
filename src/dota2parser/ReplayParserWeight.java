@@ -218,6 +218,8 @@ public class ReplayParserWeight {
 				}
 			}
 			System.out.println(count);
+			
+			
 			reader.close();
 			writer.close();
 			deathWriter.close();
