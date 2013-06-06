@@ -50,22 +50,31 @@ public class Dota2GraphBuilder {
 		if (args.length == 2 && args[0].endsWith("/")){
 			File folder = new File(args[0]);
 			File[] listOfFiles = folder.listFiles();
-
+			int correct = 0;
+			int total = 0;
 		    for (File f : listOfFiles) {
+		    	
 		    	if (f.getName().endsWith(".log_parsed")) {
+		    		total++;
+		    		String mvp1 = "", mvp2 = "";
 		    		Dota2GraphBuilder builder = new Dota2GraphBuilder();
 					builder.readInTimeWindows(args[1]);
 					for (ArrayList<Date> dates : builder.getTimeWindows()){
 						
 						builder.createGraph(f.getAbsolutePath(),dates.get(0), dates.get(1));
-						System.out.println(builder.getGraph().calculateMVP());		
+						mvp1 = builder.getGraph().calculateMVP();
+						System.out.println(mvp1);		
 					}
-					
-					System.out.println("KDA:"+builder.getKDAMVP(f.getAbsolutePath().replace(".log_parsed", ".txt")));
+					mvp2 = builder.getKDAMVP(f.getAbsolutePath().replace(".log_parsed", ".txt"));
+					System.out.println(mvp2);
 					System.out.println();
+					
+					if (mvp1.equals(mvp2)){
+						correct++;
+					}
 		    	}
 		    }
-
+		    System.out.println("FINAL: " + correct + "/" + total);
 		}
 
 	}
@@ -104,6 +113,7 @@ public class Dota2GraphBuilder {
 		int weight = 0;
 		if (time.compareTo(startTime)>= 0 && time.compareTo(stopTime)<= 0)
 		{
+			
 			if (line.contains("damage")){
 				for (int i=2;i<words.indexOf("deals");i++){
 					p1Name = p1Name + words.get(i) + " ";
@@ -125,9 +135,13 @@ public class Dota2GraphBuilder {
 					p2Name = p2Name + words.get(i) + " ";
 				}
 				p2Name = p2Name.trim();
-				weight = Integer.parseInt(
-						words.get(words.indexOf("HP") - 1) );
+				//if you heal yourself that weight doesnt count.
+				if (!p1Name.equals(p2Name)){
+					weight = Integer.parseInt(
+							words.get(words.indexOf("HP") - 1) );
+				}
 			}
+			
 			if (line.contains("dies")){
 				for (int i=2;i<words.indexOf("dies");i++){
 					p2Name = p2Name + words.get(i) + " ";
@@ -137,7 +151,7 @@ public class Dota2GraphBuilder {
 					p1Name = p1Name + words.get(i) + " ";
 				}
 				p1Name = p1Name.trim();
-				weight = 900;
+				weight = 1000 ;
 			}
 			Dota2GraphNode p1Node = new Dota2GraphNode(p1Name);
 			Dota2GraphNode p2Node = new Dota2GraphNode(p2Name);
@@ -190,17 +204,22 @@ public class Dota2GraphBuilder {
 				if (line.trim().contains("Players Info:")){
 					//read in another line because the next line is blank
 					line = reader.readLine();
+					System.out.println(file.getName());
 					while (! (line = reader.readLine()).trim().equals("")) {
 						//System.out.println(line);
 
 						int startIndex = line.indexOf("KDA: ") + 5;
-						int endIndex = line.indexOf(" CS: ") - 1;
+						int endIndex = line.indexOf(" CS: ");;
 						String[] KDAString = line.substring(startIndex, endIndex).split("/");
 						double denominator = Double.parseDouble(KDAString[1]);
 						if (denominator == 0){
 							denominator = .01;
 						}
-						double kda = Double.parseDouble(KDAString[0]) / denominator;
+						//double kda = Double.parseDouble(KDAString[0]) / denominator;
+						double kda = Double.parseDouble(KDAString[0]) * 2 +  
+								     Double.parseDouble(KDAString[1]) * -3 +
+								     Double.parseDouble(KDAString[2]) * 1;
+						
 						if (kda > bestKDA){
 							bestKDA = kda;
 							startIndex = line.indexOf(": ") + 2;
@@ -219,7 +238,7 @@ public class Dota2GraphBuilder {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return bestHero + " " + bestKDA;
+		return bestHero;
 		
 	}
 

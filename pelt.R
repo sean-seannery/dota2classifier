@@ -1,4 +1,4 @@
-setwd( "C:/Users/Emre/Documents/GitHub/dota2classifier")
+setwd( ".")
 args <- commandArgs(trailingOnly = TRUE)
 library(changepoint)
 deaths = read.table(args[2])
