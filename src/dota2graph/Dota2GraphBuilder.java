@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 
 /**
  * @author sam
@@ -34,14 +35,23 @@ public class Dota2GraphBuilder {
 			System.out.println("java Dota2GraphBuilder thisfile.log_parsed times.txt");
 
 		}
+		
+		HashMap <String, Integer> totalMVP = new HashMap<String, Integer>();
+		
 		if (args.length == 2 && args[0].endsWith(".log_parsed")){
 			Dota2GraphBuilder builder = new Dota2GraphBuilder();
 			builder.readInTimeWindows(args[1]);
 			for (ArrayList<Integer> dates : builder.getTimeWindows()){
 				builder.createGraph(args[0],dates.get(0), dates.get(1));
-				//System.out.println(builder.getGraph());
-				System.out.println(builder.getGraph().calculateMVP());
+				String mvp1 = builder.getGraph().calculateMVP();
+				System.out.println(mvp1);		
 				System.out.println();
+				if (totalMVP.containsKey(mvp1)){
+					totalMVP.put(mvp1, totalMVP.get(mvp1) + 1);
+				} else {
+					totalMVP.put(mvp1,1);
+				}
+				System.out.println(totalMVP.toString());
 			}
 			
 			System.out.println(builder.getKDAMVP(args[0].replace(".log_parsed", ".txt")));
@@ -65,6 +75,11 @@ public class Dota2GraphBuilder {
 						builder.createGraph(f.getAbsolutePath(),dates.get(0), dates.get(1));
 						mvp1 = builder.getGraph().calculateMVP();
 						System.out.println(mvp1);		
+						if (totalMVP.containsKey(mvp1)){
+							totalMVP.put(mvp1, totalMVP.get(mvp1) + 1);
+						} else {
+							totalMVP.put(mvp1,1);
+						}
 					}
 					mvp2 = builder.getKDAMVP(f.getAbsolutePath().replace(".log_parsed", ".txt"));
 					System.out.println(mvp2);
