@@ -47,7 +47,7 @@ public class ReplayParserWeight {
 			ReplayParserWeight parser = new ReplayParserWeight();
 			for (String filename : args){
 				System.out.println("Processing: " + filename);
-				parser.parse(filename, filename + "_parsed",filename + "_timed",0);
+				parser.parse(filename, filename + "_parsed",filename + "_timed",filename+ "_death",0);
 			}
 		}
 		//process .log files in a full directory. requires user to include '/' to work
@@ -61,7 +61,7 @@ public class ReplayParserWeight {
 				if (filename.getName().endsWith(".log"))
 				{
 					System.out.println("Processing: " + filename.getName());
-					parser.parse(filename.getAbsolutePath(), filename.getAbsolutePath() + "_parsed",filename.getAbsolutePath() + "_timed",0);
+					parser.parse(filename.getAbsolutePath(), filename.getAbsolutePath() + "_parsed",filename.getAbsolutePath() + "_timed",filename.getAbsolutePath() + "_death",0);
 
 				}
 
@@ -90,11 +90,13 @@ public class ReplayParserWeight {
 	}
 
 
-	public void parse(String inputFile, String outputFile,String outputTimesFile,long timeInterval){
+	public void parse(String inputFile, String outputFile,String outputTimesFile,String deathTimesFile,long timeInterval){
 		File inFile = new File(inputFile);
 		File outFile = new File(outputFile);
 		File outTimesFile = new File(outputTimesFile);
+		File deathTimesFilePointer = new File(deathTimesFile);
 		BufferedWriter writer = null;
+		BufferedWriter deathWriter = null;
 		BufferedWriter timesWriter = null;
 		BufferedReader reader = null;
 		String line = null;
@@ -114,6 +116,7 @@ public class ReplayParserWeight {
 			reader = new BufferedReader(new FileReader(inFile));
 			writer = new BufferedWriter(new FileWriter(outFile));
 			timesWriter = new BufferedWriter(new FileWriter(outTimesFile));
+			deathWriter = new BufferedWriter(new FileWriter(deathTimesFilePointer));
 			while ((line = reader.readLine()) != null) {
 				boolean ignore_line = false;
 				line = line.replace(".", "");
@@ -133,12 +136,20 @@ public class ReplayParserWeight {
 
 					String newTime = words[0];
 					double weight = 0;
+					
+					
 					ArrayList<String> wordsAL = new ArrayList<String>(Arrays.asList(line.split(" ")));
 					Date date = null;
+					
+					
 					try {
 						date = dateFormat.parse(newTime);
 						newTimeCalender.setTime(date);
 						newTimeMs = (newTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000; 
+						if (line.contains("dies"))
+						{
+							deathWriter.write(newTimeMs + " " + 1+ "\n");
+						}
 					} catch (ParseException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -202,12 +213,14 @@ public class ReplayParserWeight {
 						lastTimeMs = (lastTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000; 
 						lastCount = 1;
 					}
+					
 					writer.write(line + "\n");
 				}
 			}
 			System.out.println(count);
 			reader.close();
 			writer.close();
+			deathWriter.close();
 			timesWriter.close();
 		} catch (IOException e) {
 			e.printStackTrace();
