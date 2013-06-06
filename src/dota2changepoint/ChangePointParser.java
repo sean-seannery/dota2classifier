@@ -49,9 +49,9 @@ public class ChangePointParser {
 			if (timeSeries.get(i-2) < timeSeries.get(i) && timeSeries.get(i-1) < timeSeries.get(i)
 					&& timeSeries.get(i) > timeSeries.get(i+1) && timeSeries.get(i+1) >= timeSeries.get(i+2)){
 
-				//if (timeSeries.get(i) > Math.exp(.0005*i)+300){
+				if (timeSeries.get(i) > Math.exp(.0005*i)+300){
 					peaks.add(i);
-				//}
+				}
 
 
 			}
@@ -62,24 +62,6 @@ public class ChangePointParser {
 
 	}
 
-	/*
-	public ArrayList<Integer> getChangepointPeaks()
-	{
-		ArrayList<Integer> peaks = new ArrayList<Integer>();
-		for (int i = 2; i < timeSeries.size() - 2; i++){
-
-			/*if (timeSeries.get(i-2) <= timeSeries.get(i-1) && timeSeries.get(i-1) < timeSeries.get(i)
-					&& timeSeries.get(i) > timeSeries.get(i+1) && timeSeries.get(i+1) >= timeSeries.get(i+2)){
-				if (timeSeries.get(i) > Math.exp(.0005*i)+300)
-				{
-					peaks.add(i);
-				}
-			}
-
-		}
-
-		return peaks;
-	}*/
 	public void getChangepointWindows(ArrayList<Integer> input,String fileName)
 	{
 		File outFile = new File(fileName);

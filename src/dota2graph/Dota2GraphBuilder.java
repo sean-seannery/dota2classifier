@@ -20,7 +20,8 @@ import java.util.Date;
 public class Dota2GraphBuilder {
 
 	private Dota2Graph graph;
-	private ArrayList<ArrayList<Date>> timeWindows;
+	private ArrayList<ArrayList<Integer>> timeWindows;
+	private Date startTimeOffset = null;
 	
 	/**
 	 * @param args
@@ -36,9 +37,9 @@ public class Dota2GraphBuilder {
 		if (args.length == 2 && args[0].endsWith(".log_parsed")){
 			Dota2GraphBuilder builder = new Dota2GraphBuilder();
 			builder.readInTimeWindows(args[1]);
-			for (ArrayList<Date> dates : builder.getTimeWindows()){
+			for (ArrayList<Integer> dates : builder.getTimeWindows()){
 				builder.createGraph(args[0],dates.get(0), dates.get(1));
-				System.out.println(builder.getGraph());
+				//System.out.println(builder.getGraph());
 				System.out.println(builder.getGraph().calculateMVP());
 				System.out.println();
 			}
@@ -59,7 +60,7 @@ public class Dota2GraphBuilder {
 		    		String mvp1 = "", mvp2 = "";
 		    		Dota2GraphBuilder builder = new Dota2GraphBuilder();
 					builder.readInTimeWindows(args[1]);
-					for (ArrayList<Date> dates : builder.getTimeWindows()){
+					for (ArrayList<Integer> dates : builder.getTimeWindows()){
 						
 						builder.createGraph(f.getAbsolutePath(),dates.get(0), dates.get(1));
 						mvp1 = builder.getGraph().calculateMVP();
@@ -79,7 +80,7 @@ public class Dota2GraphBuilder {
 
 	}
 	
-	public void createGraph(String fileName, Date startTime, Date stopTime) {
+	public void createGraph(String fileName, Integer startTime, Integer stopTime) {
 		graph = new Dota2Graph();
 		File file = new File (fileName);
 		BufferedReader reader = null;
@@ -97,13 +98,21 @@ public class Dota2GraphBuilder {
 	}
 	
 	
-	private void parseDota2Event(String line, Date startTime, Date stopTime) {
-
+	private void parseDota2Event(String line, Integer startTime, Integer stopTime) {
+	
 		line = line.replace(".", "");
 		ArrayList<String> words = new ArrayList<String>(Arrays.asList(line.split(" ")));
-		Date time = null;
+		Date timed = null;
+		Integer time = -1;
 		try {
-			time = new SimpleDateFormat("HH:mm").parse(words.get(0));
+			timed = new SimpleDateFormat("HH:mm").parse(words.get(0));
+			if (startTimeOffset == null){
+				startTimeOffset = timed;
+			}
+
+			time = (int) ((timed.getTime() - startTimeOffset.getTime()) /  1000 / 60);
+
+			
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
@@ -111,7 +120,7 @@ public class Dota2GraphBuilder {
 		String p1Name = "";
 		String p2Name = "";
 		int weight = 0;
-		if (time.compareTo(startTime)>= 0 && time.compareTo(stopTime)<= 0)
+		if (time >= startTime && time <=stopTime)
 		{
 			
 			if (line.contains("damage")){
@@ -155,33 +164,27 @@ public class Dota2GraphBuilder {
 			}
 			Dota2GraphNode p1Node = new Dota2GraphNode(p1Name);
 			Dota2GraphNode p2Node = new Dota2GraphNode(p2Name);
-			Dota2GraphEdge edge = new Dota2GraphEdge(weight, p2Node, time);
+			Dota2GraphEdge edge = new Dota2GraphEdge(weight, p2Node, null);
 			graph.addNode(p1Node);
 			graph.addNode(p2Node);
 			graph.addEdge(p1Node, edge);
 		}
 	}
 	
-	public ArrayList<ArrayList<Date>> readInTimeWindows(String fileName) {
-		ArrayList<ArrayList<Date>> retVal = new ArrayList<ArrayList<Date>>();
+	public ArrayList<ArrayList<Integer>> readInTimeWindows(String fileName) {
+		ArrayList<ArrayList<Integer>> retVal = new ArrayList<ArrayList<Integer>>();
 		File file = new File (fileName);
 		BufferedReader reader = null;
 		try {
 			reader = new BufferedReader(new FileReader(file));
 			String line = null;
 			while ((line = reader.readLine()) != null) {
-				Date time1 = null;
-				Date time2 = null;
-				try {
-					time1 = new SimpleDateFormat("HH:mm").parse(line.split(" ")[0]);
-					time2 = new SimpleDateFormat("HH:mm").parse(line.split(" ")[1]);
-					ArrayList<Date> temp = new ArrayList<Date>();
-					temp.add(time1);
-					temp.add(time2);
-					retVal.add(temp);
-				} catch (ParseException e) {
-					e.printStackTrace();
-				}
+				int time1 = Integer.parseInt(line.split(" ")[0]);;
+				int time2 = Integer.parseInt(line.split(" ")[1]);
+				ArrayList<Integer> temp = new ArrayList<Integer>();
+				temp.add(time1);
+				temp.add(time2);
+				retVal.add(temp);
 			}
 			
 		} catch (IOException e) {
@@ -250,11 +253,11 @@ public class Dota2GraphBuilder {
 		this.graph = graph;
 	}
 
-	public ArrayList<ArrayList<Date>> getTimeWindows() {
+	public ArrayList<ArrayList<Integer>> getTimeWindows() {
 		return timeWindows;
 	}
 
-	public void setTimeWindows(ArrayList<ArrayList<Date>> timeWindows) {
+	public void setTimeWindows(ArrayList<ArrayList<Integer>> timeWindows) {
 		this.timeWindows = timeWindows;
 	}
 
