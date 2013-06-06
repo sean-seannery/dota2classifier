@@ -80,7 +80,7 @@ public class ChangePointParser {
 
 		return peaks;
 	}*/
-	public void getChangepointWindows(ArrayList<Integer> input,String fileName)
+	public ArrayList<Window>  getChangepointWindows(ArrayList<Integer> input,String fileName)
 	{
 
 		ArrayList<Window> windows = new ArrayList<Window>(input.size());
@@ -103,9 +103,9 @@ public class ChangePointParser {
 			windows.add(new Window(left,right));
 		}
 
-		mergeOverlappingWindows(windows,fileName);
+		return mergeOverlappingWindows(windows,fileName);
 	}
-	public void mergeOverlappingWindows(ArrayList<Window> windows,String fileName)
+	public ArrayList<Window> mergeOverlappingWindows(ArrayList<Window> windows,String fileName)
 	{	
 		try {
 			File outFile = new File(fileName);
@@ -129,6 +129,7 @@ public class ChangePointParser {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		return windows;
 	}
 	public int getChangepointForOneSide(ArrayList<Integer> input,int peak,boolean left)
 	{
@@ -186,24 +187,32 @@ public class ChangePointParser {
 		return getChangepointWindowsRec(input, peak, (peak+window)/2,tries,left);
 	}
 	
-	public double calculateAccuracy(String filename) 
+	public double calculateAccuracy(String filename,ArrayList<Window> windows) 
 	{
 		File file = new File(filename);
 		BufferedReader reader;
+		int total = 0;
+		int found = 0;
 		try {
 			reader = new BufferedReader(new FileReader(file));
-
 			String line = "";
 			while ((line = reader.readLine()) != null) {
-				if( ! line.trim().equals("")) {
-					timeSeries.add(Integer.parseInt(line.split(" ")[0]), Double.parseDouble(line.split(" ")[1]));
+				String words[] = line.split(" ");
+				
+				for (int i = 0; i < windows.size(); i++) 
+				{
+					if (windows.get(i).inWindow(Integer.parseInt(words[0])))
+						found++;
 				}
+				total++;
 
 			}
+			reader.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return 0;
+		;
+		return (double)found/total;
 	}
 
 	public static void main(String[] args) 
@@ -213,7 +222,8 @@ public class ChangePointParser {
 		ArrayList<Integer> peaks = cpp.getChangepointPeaks();
 		if (peaks.size() == 0)
 			System.err.println("NO PEAKS FOUND");
-		cpp.getChangepointWindows(peaks,"201395825.txt_times");
+		ArrayList<Window> windows = cpp.getChangepointWindows(peaks,"201395825.txt_times");
+		System.out.println(cpp.calculateAccuracy("201395825.log_death",windows));
 	}
 
 	class Window
