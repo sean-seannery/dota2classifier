@@ -50,7 +50,7 @@ public class ChangePointParser {
 					&& timeSeries.get(i) > timeSeries.get(i+1) && timeSeries.get(i+1) >= timeSeries.get(i+2)){
 
 				if (timeSeries.get(i) > Math.exp(.0005*i)+300){
-					peaks.add(i);
+				peaks.add(i);
 				}
 
 
@@ -62,16 +62,28 @@ public class ChangePointParser {
 
 	}
 
+	/*
+	public ArrayList<Integer> getChangepointPeaks()
+	{
+		ArrayList<Integer> peaks = new ArrayList<Integer>();
+		for (int i = 2; i < timeSeries.size() - 2; i++){
+
+			/*if (timeSeries.get(i-2) <= timeSeries.get(i-1) && timeSeries.get(i-1) < timeSeries.get(i)
+					&& timeSeries.get(i) > timeSeries.get(i+1) && timeSeries.get(i+1) >= timeSeries.get(i+2)){
+				if (timeSeries.get(i) > Math.exp(.0005*i)+300)
+				{
+					peaks.add(i);
+				}
+			}
+
+		}
+
+		return peaks;
+	}*/
 	public void getChangepointWindows(ArrayList<Integer> input,String fileName)
 	{
-		File outFile = new File(fileName);
-		BufferedWriter writer = null;
-		try {
-			writer = new BufferedWriter(new FileWriter(outFile));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
+		ArrayList<Window> windows = new ArrayList<Window>(input.size());
 		for (int i = 0; i < input.size(); i++) 
 		{
 			int current = input.get(i);
@@ -88,22 +100,36 @@ public class ChangePointParser {
 			//current should be greater than left
 			//current should be lesser than right
 			System.out.println("right " + right);
-			try {
-				writer.write(left + " " + right + "\n");
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			windows.add(new Window(left,right));
 		}
+
+		mergeOverlappingWindows(windows,fileName);
+	}
+	public void mergeOverlappingWindows(ArrayList<Window> windows,String fileName)
+	{	
 		try {
+			File outFile = new File(fileName);
+
+			BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
+			for (int i = 0; i < windows.size()-1; i++)
+			{
+				if (windows.get(i).merge(windows.get(i+1)))
+				{
+					windows.remove(i+1);
+					i--;
+				}
+			}
+			for (int i = 0; i < windows.size(); i++)
+			{
+				writer.write(windows.get(i).toString());
+
+			}
 			writer.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
-
 	public int getChangepointForOneSide(ArrayList<Integer> input,int peak,boolean left)
 	{
 		int result = -1;
@@ -159,14 +185,64 @@ public class ChangePointParser {
 		//go left or right
 		return getChangepointWindowsRec(input, peak, (peak+window)/2,tries,left);
 	}
+	
+	public double calculateAccuracy(String filename) 
+	{
+		File file = new File(filename);
+		BufferedReader reader;
+		try {
+			reader = new BufferedReader(new FileReader(file));
+
+			String line = "";
+			while ((line = reader.readLine()) != null) {
+				if( ! line.trim().equals("")) {
+					timeSeries.add(Integer.parseInt(line.split(" ")[0]), Double.parseDouble(line.split(" ")[1]));
+				}
+
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
 
 	public static void main(String[] args) 
 	{
+		
 		ChangePointParser cpp=  new ChangePointParser("201395825.log_timed");
 		ArrayList<Integer> peaks = cpp.getChangepointPeaks();
 		if (peaks.size() == 0)
 			System.err.println("NO PEAKS FOUND");
 		cpp.getChangepointWindows(peaks,"201395825.txt_times");
+	}
+
+	class Window
+	{
+		int left;
+		int right;
+		Window(int left,int right)
+		{
+			this.left = left;
+			this.right = right;
+		}
+		public boolean merge(Window target)
+		{
+			if (this.right >= target.left)
+			{
+				this.right = Math.max(this.right,target.right);
+				this.left = Math.min(this.left,target.left);
+				return true;
+			}
+			return false;
+		}
+		public boolean inWindow(int target)
+		{
+			return (target>=this.left)&& (target<=this.right);
+		}
+		public String toString()
+		{
+			return left + " " + right + "\n";
+		}
 	}
 
 }
