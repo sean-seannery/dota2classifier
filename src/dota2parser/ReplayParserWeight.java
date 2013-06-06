@@ -205,7 +205,7 @@ public class ReplayParserWeight {
 						count++;
 						lastTimeCalender.setTime(date);
 						lastTimeMs = (lastTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000; 
-						lastCount = 1;
+						lastCount = 0;
 					}
 					
 					writer.write(line + "\n");
