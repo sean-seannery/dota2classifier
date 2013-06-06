@@ -32,7 +32,7 @@ import java.util.Queue;
 public class ReplayParserWeight {
 
 	private HashSet<String> bad_dictionary;
-
+	private static int WINDOW_SIZE = 10;
 
 	/**
 	 * @param args takes in either a file name or a directory to process
@@ -192,24 +192,14 @@ public class ReplayParserWeight {
 					}
 					else 
 					{
-						weight = 0;
 						
-						ArrayList<Double> weightsInWindow = new ArrayList<Double>(queue);
-						for (int i = 0; i < weightsInWindow.size(); i++) 
-						{
-							weight += ((double)(i+1)/10)*weightsInWindow.get(i);
-						}
-						weight += lastCount;
-						queue.offer((double) lastCount);
-						if (queue.size()>10)
-						{
-							queue.poll();
-						}
+						weight = calculateWeightInWindow(queue,lastCount);
 						timesWriter.write((lastTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000 + " " + weight + "\n");
 						
 						for(int i = (int) (lastTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000+1;i<(int) (newTimeCalender.getTimeInMillis()-firstTimeCalender.getTimeInMillis())/1000; i++)
 						{
-							timesWriter.write(i + " " + 0 + "\n");
+							weight = calculateWeightInWindow(queue,0);
+							timesWriter.write(i + " " + weight + "\n");
 						}
 						count++;
 						lastTimeCalender.setTime(date);
@@ -244,6 +234,25 @@ public class ReplayParserWeight {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public double calculateWeightInWindow(Queue queue, int count)
+	{
+		double weight = 0;
+		
+		ArrayList<Double> weightsInWindow = new ArrayList<Double>(queue);
+		for (int i = 0; i < weightsInWindow.size(); i++) 
+		{
+			weight += ((double)(i+1)/WINDOW_SIZE)*weightsInWindow.get(i);
+		}
+		weight += count;
+		queue.offer((double) count);
+		if (queue.size()>WINDOW_SIZE)
+		{
+			queue.poll();
+		}
+		return weight;
+		
 	}
 
 
